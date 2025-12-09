@@ -293,4 +293,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get error_unknown => 'Something went wrong. Please try again.';
+
+  @override
+  String get nearPharmacy => 'Find the Nearest Pharmacy';
 }

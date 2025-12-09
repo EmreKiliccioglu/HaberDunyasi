@@ -661,6 +661,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bir şeyler ters gitti. Lütfen tekrar deneyin.'**
   String get error_unknown;
+
+  /// No description provided for @nearPharmacy.
+  ///
+  /// In tr, this message translates to:
+  /// **'En Yakın Eczaneyi Bul'**
+  String get nearPharmacy;
 }
 
 class _AppLocalizationsDelegate

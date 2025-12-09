@@ -92,5 +92,6 @@
   "error_weakPassword": "The password is too weak.",
   "error_channel": "Please fill in all fields.",
   "error_general": "An error occurred. Please try again.",
-  "error_unknown": "Something went wrong. Please try again."
+  "error_unknown": "Something went wrong. Please try again.",
+  "nearPharmacy": "Find the Nearest Pharmacy"
 }

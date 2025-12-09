@@ -92,6 +92,7 @@
   "error_weakPassword": "Şifre çok zayıf.",
   "error_channel": "Lütfen tüm alanları doldurun.",
   "error_general": "Bir hata oluştu. Lütfen tekrar deneyin.",
-  "error_unknown": "Bir şeyler ters gitti. Lütfen tekrar deneyin."
+  "error_unknown": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
+  "nearPharmacy": "En Yakın Eczaneyi Bul"
 
   }

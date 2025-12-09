@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../l10n/app_localizations.dart';
 import 'ui_pharmacy.dart';
@@ -31,6 +33,7 @@ class _MainPharmacyState extends State<MainPharmacy> {
   void initState() {
     super.initState();
     _loadFavoriteCity();
+    _getUserLocation();
   }
 
   // FAVORİ ŞEHİRİ FIRESTORE'DAN YÜKLEME
@@ -58,7 +61,6 @@ class _MainPharmacyState extends State<MainPharmacy> {
     } else {
       _fetchData();
     }
-
     setState(() {});
   }
 
@@ -77,6 +79,139 @@ class _MainPharmacyState extends State<MainPharmacy> {
     setState(() {
       favoriteCity = city;
     });
+  }
+
+  Future<void> _getUserLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    try {
+      // KONUM AÇIK MI
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() => _error = "Konum servisleri kapalı!");
+        return;
+      }
+
+      // KONUM İZİN DURUMU
+      permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() => _error = "Konum izni verilmedi!");
+          return;
+        }
+      }
+
+      // KALICI REDDEDİLMİŞ Mİ KONTROL
+      if (permission == LocationPermission.deniedForever) {
+        setState(() => _error = "Konum izni kalıcı olarak engellenmiş!");
+        return;
+      }
+
+      // KONUMU AL
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+          distanceFilter: 0,
+        ),
+      );
+      debugPrint("Latitude: ${position.latitude}, Longitude: ${position.longitude}");
+
+      List<Placemark> placemarks = [];
+      try {
+        placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+      } catch (e) {
+        debugPrint("Geocoding hatası: $e");
+      }
+
+      String? city;
+      String? district;
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        city = place.administrativeArea;
+        district = place.subAdministrativeArea ?? place.locality;
+        debugPrint("Şehir: $city, İlçe: $district");
+      } else {
+        debugPrint("Placemark bulunamadı.");
+      }
+
+      setState(() {
+        if (city != null && city.isNotEmpty) {
+          _cityController.text = city;
+        }
+        if (district != null && district.isNotEmpty) {
+          _districtController.text = district;
+        }
+      });
+
+      if ((_cityController.text).trim().isNotEmpty) {
+        _fetchData();
+      }
+    } catch (e) {
+      debugPrint("Konum alma hatası: $e");
+      setState(() => _error = "Konum alınırken bir hata oluştu.");
+    }
+  }
+
+  void findNear() async {
+    if (_pharmacies.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Önce eczaneleri listeleyin.")),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // KULLANICI KONUMU
+      Position pos = await Geolocator.getCurrentPosition();
+
+      double userLat = pos.latitude;
+      double userLng = pos.longitude;
+
+      Pharmacy? nearest;
+      double nearestDistance = double.infinity;
+
+      // EN YAKIN ECZANE
+      for (var p in _pharmacies) {
+        if (p.lat.isEmpty || p.lng.isEmpty) continue;
+
+        double lat = double.parse(p.lat);
+        double lng = double.parse(p.lng);
+
+        double distance = Geolocator.distanceBetween(
+          userLat,
+          userLng,
+          lat,
+          lng,
+        );
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearest = p;
+        }
+      }
+
+      if (nearest == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Yakın eczane bulunamadı.")),
+        );
+        return;
+      }
+      // NAVİGASYONDA GÖSTER
+      _openMaps(nearest.lat, nearest.lng);
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Hata: $e")),
+      );
+    }
+    setState(() => _isLoading = false);
   }
 
 // FAVORİ ŞEHİR SİLME
@@ -161,6 +296,7 @@ class _MainPharmacyState extends State<MainPharmacy> {
       pharmacies: _pharmacies,
       isLoading: _isLoading,
       onNavigate: _openMaps,
+      onFindNearest: findNear,
       error: _error,
       userLoggedIn: userLoggedIn,
       favoriteCity: favoriteCity ?? "",

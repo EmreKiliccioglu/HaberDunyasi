@@ -15,6 +15,7 @@ class UiPharmacy extends StatefulWidget {
   final bool userLoggedIn;
   final String favoriteCity;
   final Function(String city) onFavoritePressed;
+  final VoidCallback onFindNearest;
   final String? error;
 
   const UiPharmacy({
@@ -29,6 +30,7 @@ class UiPharmacy extends StatefulWidget {
     required this.userLoggedIn,
     required this.favoriteCity,
     required this.onFavoritePressed,
+    required this.onFindNearest,
     this.error,
   });
 
@@ -45,10 +47,13 @@ class _UiPharmacyState extends State<UiPharmacy> {
   @override
   void initState() {
     super.initState();
+
     if (widget.userLoggedIn && widget.favoriteCity.isNotEmpty) {
       widget.cityController.text = widget.favoriteCity;
     }
+
     _updateDistricts(widget.cityController.text);
+
     widget.cityController.addListener(() {
       _updateDistricts(widget.cityController.text);
     });
@@ -106,16 +111,18 @@ class _UiPharmacyState extends State<UiPharmacy> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       appBar: MenuBar.build(title: widget.title, context: context),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
+
+      body: SafeArea(
         child: Column(
           children: [
-            SingleChildScrollView(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
               child: Column(
                 children: [
-                  // ŞEHİR ALANI
+
+                  // ŞEHİR SEÇİMİ
                   Container(
                     margin: const EdgeInsets.symmetric(vertical: 6),
                     child: Column(
@@ -134,14 +141,13 @@ class _UiPharmacyState extends State<UiPharmacy> {
                                   controller: widget.cityController,
                                   textAlignVertical: TextAlignVertical.center,
                                   decoration: InputDecoration(
-                                    hintText:
-                                    AppLocalizations.of(context)!.cityHint,
+                                    hintText: AppLocalizations.of(context)!.cityHint,
                                     border: InputBorder.none,
                                     isDense: true,
-                                    contentPadding:
-                                    EdgeInsets.symmetric(vertical: 0),
+                                    contentPadding: EdgeInsets.zero,
                                   ),
                                   onTap: () {
+                                    FocusScope.of(context).unfocus();
                                     cityDropdownOpen = true;
                                     widget.cityController.clear();
                                     districtDropdownOpen = false;
@@ -151,9 +157,11 @@ class _UiPharmacyState extends State<UiPharmacy> {
                                   onChanged: filterCities,
                                 ),
                               ),
-                              Icon(cityDropdownOpen
-                                  ? Icons.arrow_drop_up
-                                  : Icons.arrow_drop_down),
+                              Icon(
+                                cityDropdownOpen
+                                    ? Icons.arrow_drop_up
+                                    : Icons.arrow_drop_down,
+                              )
                             ],
                           ),
                         ),
@@ -174,8 +182,6 @@ class _UiPharmacyState extends State<UiPharmacy> {
 
                                   return ListTile(
                                     title: Text(c),
-
-                                    // FAVORİ ŞEHİR
                                     trailing: widget.userLoggedIn
                                         ? IconButton(
                                       icon: Icon(
@@ -189,12 +195,10 @@ class _UiPharmacyState extends State<UiPharmacy> {
                                       onPressed: () {
                                         widget.onFavoritePressed(c);
                                         widget.cityController.text = c;
-
                                         setState(() {});
                                       },
                                     )
                                         : null,
-
                                     onTap: () => selectCity(c),
                                   );
                                 },
@@ -205,7 +209,7 @@ class _UiPharmacyState extends State<UiPharmacy> {
                     ),
                   ),
 
-                  // İLÇE ALANI
+                  // İLÇE SEÇİMİ
                   Container(
                     margin: const EdgeInsets.symmetric(vertical: 6),
                     child: Column(
@@ -222,44 +226,41 @@ class _UiPharmacyState extends State<UiPharmacy> {
                               Expanded(
                                 child: TextField(
                                   controller: widget.districtController,
-                                  enabled: ilceHaritasi.containsKey(
-                                      widget.cityController.text),
+                                  enabled: ilceHaritasi.containsKey(widget.cityController.text),
                                   textAlignVertical: TextAlignVertical.center,
                                   decoration: InputDecoration(
-                                    hintText: ilceHaritasi.containsKey(
-                                        widget.cityController.text)
-                                        ? AppLocalizations.of(context)!
-                                        .districtHint
-                                        : AppLocalizations.of(context)!
-                                        .noDistrict,
+                                    hintText: ilceHaritasi.containsKey(widget.cityController.text)
+                                        ? AppLocalizations.of(context)!.districtHint
+                                        : AppLocalizations.of(context)!.noDistrict,
                                     border: InputBorder.none,
                                     isDense: true,
-                                    contentPadding:
-                                    EdgeInsets.symmetric(vertical: 0),
+                                    contentPadding: EdgeInsets.zero,
                                   ),
                                   onTap: () {
-                                    if (ilceHaritasi.containsKey(
-                                        widget.cityController.text)) {
-                                      setState(() {
-                                        districtDropdownOpen = true;
-                                        widget.districtController.clear();
-                                      });
+                                    FocusScope.of(context).unfocus();
+                                    if (ilceHaritasi.containsKey(widget.cityController.text)) {
+                                      districtDropdownOpen = true;
+                                      widget.districtController.clear();
+                                      setState(() {});
                                     }
                                   },
                                   onChanged: filterDistricts,
                                 ),
                               ),
-                              Icon(districtDropdownOpen
-                                  ? Icons.arrow_drop_up
-                                  : Icons.arrow_drop_down),
+                              Icon(
+                                districtDropdownOpen
+                                    ? Icons.arrow_drop_up
+                                    : Icons.arrow_drop_down,
+                              ),
                             ],
                           ),
                         ),
+
                         if (districtDropdownOpen)
                           ConstrainedBox(
                             constraints: const BoxConstraints(maxHeight: 200),
                             child: Card(
-                              margin: const EdgeInsets.only(top: 8),
+                              margin: const EdgeInsets.only(top: 4),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -286,9 +287,7 @@ class _UiPharmacyState extends State<UiPharmacy> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        side: BorderSide(
-                          color: Theme.of(context).primaryColor,
-                        ),
+                        side: BorderSide(color: Theme.of(context).primaryColor),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -297,19 +296,37 @@ class _UiPharmacyState extends State<UiPharmacy> {
                       child: Text(AppLocalizations.of(context)!.search),
                     ),
                   ),
+
+                  // EN YAKIN ECZANE BUTONU
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: widget.onFindNearest,
+                      child: Text(
+                        AppLocalizations.of(context)!.nearPharmacy,
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 12),
+            SizedBox(height: 4),
 
+            // ECZANE LİSTESİ
             Expanded(
               child: widget.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : widget.error != null
-                  ? Center(
-                child: Text(widget.error ?? ''),
-              )
+                  ? Center(child: Text(widget.error ?? ''))
                   : _buildList(context),
             ),
           ],
@@ -317,6 +334,9 @@ class _UiPharmacyState extends State<UiPharmacy> {
       ),
     );
   }
+
+
+
 
   Widget _buildList(BuildContext context) {
     if (widget.pharmacies.isEmpty) {
@@ -329,7 +349,7 @@ class _UiPharmacyState extends State<UiPharmacy> {
       itemBuilder: (context, index) {
         final p = widget.pharmacies[index];
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Column(
@@ -341,8 +361,7 @@ class _UiPharmacyState extends State<UiPharmacy> {
                       fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                    '${AppLocalizations.of(context)!.address}: ${p.address}'),
+                Text('${AppLocalizations.of(context)!.address}: ${p.address}'),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

@@ -12,7 +12,7 @@ import 'football/main_football.dart';
 import 'weather/main_weather.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/firebase_options.dart';
-import 'core/app_theme.dart';git init
+import 'core/app_theme.dart';
 
 
 

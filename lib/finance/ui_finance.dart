@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:untitled5/finance/api_model_finance.dart';
-
 import '../l10n/app_localizations.dart';
 
 class UiFinance extends StatefulWidget {
@@ -27,29 +26,41 @@ class UiFinance extends StatefulWidget {
 class _UiFinanceState extends State<UiFinance> {
   bool showAll = false;
   late Timer _timer;
-  int topStartIndex = 0;
+  late PageController _pageController;
+  int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(viewportFraction: 0.7);
+
     if (widget.items.length > 3) {
       _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
-        setState(() {
-          topStartIndex = (topStartIndex + 1) % widget.items.length;
-        });
+        if (_currentPage < widget.items.length - 1) {
+          _currentPage++;
+        } else {
+          _currentPage = 0;
+        }
+        if (_pageController.hasClients) {
+          _pageController.animateToPage(
+            _currentPage,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
       });
     }
   }
 
   @override
   void dispose() {
+    _pageController.dispose();
     _timer.cancel();
     super.dispose();
   }
 
   Color getValue2Color(double value, BuildContext context) {
-    final theme = Theme.of(context);
-    if (!widget.label2IsPercentage) return theme.colorScheme.onSurface;
+    if (!widget.label2IsPercentage) return Theme.of(context).colorScheme.onSurface;
     return value < 0 ? Colors.red : Colors.green;
   }
 
@@ -66,11 +77,6 @@ class _UiFinanceState extends State<UiFinance> {
     final displayCount = showAll ? widget.items.length : 3;
     final itemsToDisplay = widget.items.take(displayCount).toList();
 
-    final topItems = List<MarketItem>.generate(3, (i) {
-      final index = (topStartIndex + i) % widget.items.length;
-      return widget.items[index];
-    });
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Column(
@@ -85,62 +91,85 @@ class _UiFinanceState extends State<UiFinance> {
           ),
           const SizedBox(height: 12),
 
-          if (topItems.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                children: topItems.map((item) {
-                  return Expanded(
-                    child: Card(
-                      color: Theme.of(context).primaryColor.withAlpha((0.5 * 255).round()),
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              item.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.ellipsis,
+          // KAYAN KARTLAR
+          if (widget.items.isNotEmpty)
+            SizedBox(
+              height: 160,
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: widget.items.length,
+                itemBuilder: (context, index) {
+                  final item = widget.items[index];
+                  double scale = 1.0;
+                  if (_pageController.position.haveDimensions) {
+                    scale = (_pageController.page! - index).abs() * 0.1;
+                    scale = 1 - scale;
+                    if (scale < 0.8) scale = 0.8;
+                  }
+                  return Transform.scale(
+                    scale: scale,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12),
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: LinearGradient(
+                              colors: [Colors.blue.shade50, Colors.blue.shade200],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              "${widget.label1}: ${item.value1.toStringAsFixed(2)}",
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.black),
+                          ),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  item.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: Colors.black87,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  "${widget.label1}: ${item.value1.toStringAsFixed(2)}",
+                                  style: const TextStyle(color: Colors.black87,
+                                  fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  "${widget.label2}: ${formatValue2(item.value2)}",
+                                  style: TextStyle(
+                                    color: widget.label2IsPercentage
+                                        ? getValue2Color(item.value2, context)
+                                        : Colors.black87,
+                                    fontWeight: FontWeight.bold
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              "${widget.label2}: ${formatValue2(item.value2)}",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: widget.label2IsPercentage
-                                    ? getValue2Color(item.value2,context)
-                                    : Colors.black,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
                   );
-                }).toList(),
+                },
               ),
             ),
 
           const SizedBox(height: 16),
 
+          // ALT LİSTE
           if (itemsToDisplay.isNotEmpty)
-           Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Text(
                 AppLocalizations.of(context)!.marketData,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
 
@@ -152,16 +181,14 @@ class _UiFinanceState extends State<UiFinance> {
                 debugPrint("${item.name} seçildi!");
               },
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 8, horizontal: 12),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 child: Row(
                   children: [
                     Expanded(
                       flex: 3,
                       child: Text(
                         item.name,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ),
                     Expanded(
@@ -185,6 +212,7 @@ class _UiFinanceState extends State<UiFinance> {
             ),
           )),
 
+          // SHOW MORE -- SHOW LESS
           if (widget.items.length > 3)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12),
@@ -194,7 +222,9 @@ class _UiFinanceState extends State<UiFinance> {
                     showAll = !showAll;
                   });
                 },
-                child: Text(showAll ? AppLocalizations.of(context)!.showLess : AppLocalizations.of(context)!.showMore),
+                child: Text(showAll
+                    ? AppLocalizations.of(context)!.showLess
+                    : AppLocalizations.of(context)!.showMore),
               ),
             ),
         ],

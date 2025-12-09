@@ -50,7 +50,7 @@ class _MainFinanceState extends State<MainFinance> {
                       context: context,
                       isScrollControlled: true,
                       shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
                       ),
                       builder: (context) => Padding(
                         padding: EdgeInsets.only(
@@ -63,7 +63,24 @@ class _MainFinanceState extends State<MainFinance> {
                       ),
                     );
                   },
-                  child: Text(AppLocalizations.of(context)!.currencyConverter),
+                  style: ElevatedButton.styleFrom(
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                    backgroundColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey[800]
+                        : Colors.white,
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context)!.currencyConverter,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ),

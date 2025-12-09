@@ -294,4 +294,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get error_unknown => 'Bir şeyler ters gitti. Lütfen tekrar deneyin.';
+
+  @override
+  String get nearPharmacy => 'En Yakın Eczaneyi Bul';
 }
