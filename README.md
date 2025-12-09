@@ -1,16 +1,27 @@
-# untitled5
+# Haber Dünyası
 
-A new Flutter project.
+Haber Dünyası is a mobile application developed with Flutter that allows users to follow news, sports, finance, weather, and pharmacy information in a single app.
+
+## Features
+
+- Multi-tab navigation for different categories (News, Sports, Finance, Weather, Pharmacy)
+- Firebase Authentication for user login and logout
+- Firestore database integration for dynamic content
+- Dark and Light theme support
+- Multi-language support (Turkish and English)
+- Real-time content updates
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+To get started with this Flutter project:
 
-A few resources to get you started if this is your first Flutter project:
+1. Make sure you have the Flutter SDK installed.
+2. Connect the project with your Firebase configuration.
+3. Run `flutter pub get` to install dependencies.
+4. Use `flutter run` to start the application on an emulator or device.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Resources
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- [Flutter Documentation](https://docs.flutter.dev/) - Tutorials, API reference, and samples
+- [Flutter Codelab](https://docs.flutter.dev/get-started/codelab) - Build your first Flutter app
+- [Flutter Cookbook](https://docs.flutter.dev/cookbook) - Useful Flutter examples
